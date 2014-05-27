@@ -1,0 +1,85 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -
+
+import numpy
+import music
+
+class SignalBuffer:
+    def __init__(self, manager, ticket_id, buffer_len, overlap):
+        self.man = manager
+        self.ticket_id = ticket_id
+        self.signal_buffer = None
+        self.buffer_len = buffer_len
+        self.overlap = overlap
+        self.part_info = {}
+        self.current_pos = 0
+        
+    def handle_wav(self, ticket):
+        wav = ticket.get_data()
+        if None == self.signal_buffer:
+            self.signal_buffer = wav._sound
+        else:
+            self.signal_buffer = numpy.hstack((self.signal_buffer,wav._sound))
+        #print self.signal_buffer.shape
+        while len(self.signal_buffer)>=self.buffer_len:
+            part_sig = self.signal_buffer[0:self.buffer_len]
+            self.signal_buffer = self.signal_buffer[self.buffer_len:]
+            ws = music.WavSound(wav.samplerate(), part_sig)
+            t = ticket.create_ticket("wav", ws)
+            #print "created ticket", t.get_full_id()
+            self.man.push_ticket(t)
+            self.part_info[t.get_full_id()] = {"absolute-pos"          : self.current_pos,
+                                               "absolute-window-left"  : self.current_pos+self.overlap/2,
+                                               "absolute-window-right" : self.current_pos+self.buffer_len-self.overlap/2,
+                                               "window-left"           : self.overlap/2,
+                                               "window-right"          : self.buffer_len-self.overlap/2}
+            self.current_pos += self.buffer_len-self.overlap
+    
+    def handle_root(self, ticket):
+        ticket_id = str(ticket.id_track[0:2])
+        if not self.part_info.has_key(ticket_id):
+            return
+        info = self.part_info[ticket_id]
+        print "id found for", ticket.get_full_id()
+        skel_root = ticket.get_data()
+        start_offset = skel_root.start_offset()
+        if start_offset>=info["window-left"] and start_offset<info["window-right"]:
+            skel_root = skel_root.duplicate()
+            skel_root.add_offset(info["absolute-pos"])
+            self.man.push_ticket(ticket.create_ticket("skeleton-root-merged", skel_root))
+        else:
+            print "Purging", ticket.get_full_id(), "as lying outside window", info["window-left"] , info["window-right"], "at", start_offset
+
+class WavSplit:
+    def __init__(self, manager, src_name, dst_name, dst_desc = None):
+        self.man = manager
+        if None == dst_desc:
+            dst_desc = dst_name
+        self.man = manager
+        self.man.register_handler(src_name, self.handler_wav)
+        self.man.register_handler("skeleton-root", self.handler_root)
+        self.man.add_data_id(dst_name, dst_desc, "signal")
+        self.src_name = src_name
+        self.dst_name = dst_name
+        self.dst_desc = dst_desc
+        
+        self.signal_buffers = {}
+        
+    def handler_wav(self, ticket):
+        ticket_id = ticket.get_root_id()
+        if not self.signal_buffers.has_key(ticket_id):
+            self.signal_buffers[ticket_id] = SignalBuffer(self.man, ticket_id, 2660, 500)
+        self.signal_buffers[ticket_id].handle_wav(ticket)
+    def handler_root(self, ticket):
+        ticket_id = ticket.get_root_id()
+        if not self.signal_buffers.has_key(ticket_id):
+            print "Ticket with unregistered root id"
+            return
+        self.signal_buffers[ticket_id].handle_root(ticket)
+        
+class WaveletMerge:
+    pass
+
+def init_module(manager, gui):
+    return [WavSplit(manager, "run", "none")]
+    
