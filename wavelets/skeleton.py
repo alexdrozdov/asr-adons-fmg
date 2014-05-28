@@ -104,6 +104,7 @@ class SkeletonRoot:
         self.index = index
         self.description = description
         self.tracks = []
+        self.global_offset = 0
     def duplicate(self):
         return copy.deepcopy(self)
     def process(self, matrix):
@@ -202,6 +203,14 @@ class SkeletonRoot:
         for t in self.tracks:
             t.add_offset(offset)
         self.index += offset
+        self.global_offset += offset
+    def relative_start_offset(self):
+        return self.tracks[0].offsets[0] - self.global_offset
+    def relative_stop_offset(self):
+        return self.tracks[0].offsets[-1] - self.global_offset
+    def relative_offset_at_row(self, row):
+        ind = self.tracks[0].scales.index(row)
+        return self.tracks[0].offsets[ind] - self.global_offset
 
 class SkeletonExtractor:
     def __init__(self, manager, src_name, dst_name, dst_desc = None):

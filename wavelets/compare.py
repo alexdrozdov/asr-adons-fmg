@@ -287,7 +287,7 @@ class MatrixPattern:
         self.start_row = root.start_row()
         self.stop_row = root.stop_row()
         for i in range(self.start_row, self.stop_row):
-            start_index = root.offset_at_row(i)-2
+            start_index = root.relative_offset_at_row(i)-2
             stop_index = start_index+350
             sp = SigPattern(wavelet[i,start_index:stop_index])
             sp.build()
@@ -339,27 +339,24 @@ class MatrixPatternLoader(folderscan.FolderScan):
 class SkeletonCompare:
     def __init__(self, manager, wavelet_src, root_src):
         self.man = manager
-        self.man.register_handler(wavelet_src, self.handle_wavelet)
+        self.wavelet_src = wavelet_src
+        self.root_src = root_src
+        #self.man.register_handler(wavelet_src, self.handle_wavelet)
         self.man.register_handler(root_src, self.handle_roots)
         self.man.add_data_id("matrix_compare", "matrix compare class")
         self.patterns = []
         
         mpl = MatrixPatternLoader('./temporary/patterns')
         self.patterns = mpl.get_patterns()
-        #with open("./temporary/pattern.pickle") as f:
-        #    self.patterns.append(pickle.load(f))
     def handle_wavelet(self, ticket):
         self.wavelet = ticket.get_data().get_wavelet()
     def handle_roots(self, ticket):
         root = ticket.get_data()
         try:
-            n = 0
+            wavelet = ticket.find_parent_by_data_id(self.wavelet_src).get_data().get_wavelet()
             print "Parsing root", ticket.description
             print root.start_row(), root.start_offset()
-            #submatrix = self.wavelet[:, root.start_offset()-10:root.stop_offset()+400]
-            mp = MatrixPattern(self.wavelet, root)#, root.start_row(), root.start_row()+5)
-            #mp.save()
-            #self.patterns.append(mp)
+            mp = MatrixPattern(wavelet, root)
             self.man.push_ticket(ticket.create_ticket("matrix_compare", mp))
             self.compare_patterns(mp)
         except:

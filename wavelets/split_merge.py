@@ -23,16 +23,16 @@ class SignalBuffer:
         #print self.signal_buffer.shape
         while len(self.signal_buffer)>=self.buffer_len:
             part_sig = self.signal_buffer[0:self.buffer_len]
-            self.signal_buffer = self.signal_buffer[self.buffer_len:]
+            self.signal_buffer = self.signal_buffer[self.buffer_len-self.overlap:]
             ws = music.WavSound(wav.samplerate(), part_sig)
             t = ticket.create_ticket("wav", ws)
             #print "created ticket", t.get_full_id()
             self.man.push_ticket(t)
             self.part_info[t.get_full_id()] = {"absolute-pos"          : self.current_pos,
-                                               "absolute-window-left"  : self.current_pos+self.overlap/2,
-                                               "absolute-window-right" : self.current_pos+self.buffer_len-self.overlap/2,
-                                               "window-left"           : self.overlap/2,
-                                               "window-right"          : self.buffer_len-self.overlap/2}
+                                               "absolute-window-left"  : self.current_pos+100,
+                                               "absolute-window-right" : self.current_pos+self.buffer_len-self.overlap+100,
+                                               "window-left"           : 100,
+                                               "window-right"          : self.buffer_len-self.overlap+100}
             self.current_pos += self.buffer_len-self.overlap
     
     def handle_root(self, ticket):
@@ -40,7 +40,7 @@ class SignalBuffer:
         if not self.part_info.has_key(ticket_id):
             return
         info = self.part_info[ticket_id]
-        print "id found for", ticket.get_full_id()
+        #print "id found for", ticket.get_full_id()
         skel_root = ticket.get_data()
         start_offset = skel_root.start_offset()
         if start_offset>=info["window-left"] and start_offset<info["window-right"]:
@@ -68,7 +68,7 @@ class WavSplit:
     def handler_wav(self, ticket):
         ticket_id = ticket.get_root_id()
         if not self.signal_buffers.has_key(ticket_id):
-            self.signal_buffers[ticket_id] = SignalBuffer(self.man, ticket_id, 2660, 500)
+            self.signal_buffers[ticket_id] = SignalBuffer(self.man, ticket_id, 2660, 600)
         self.signal_buffers[ticket_id].handle_wav(ticket)
     def handler_root(self, ticket):
         ticket_id = ticket.get_root_id()
