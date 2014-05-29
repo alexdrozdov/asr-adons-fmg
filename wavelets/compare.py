@@ -321,7 +321,7 @@ class MatrixPatternLoader(folderscan.FolderScan):
     def on_folder_loaded(self):
         info_file = self.get_file("info")
         with open(info_file) as f:
-            self.pattern_id = f.readline()
+            self.pattern_id = f.readline().replace('\r','').replace('\n','')
         pickled_patterns = self.get_files("*.pickle")
         for pp in pickled_patterns:
             with open(pp) as f:

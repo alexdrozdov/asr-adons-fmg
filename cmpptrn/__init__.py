@@ -1,2 +1,2 @@
 
-__all__ = ['cmpptrn',]
+__all__ = ['cmpptrn', 'compare_patterns']
