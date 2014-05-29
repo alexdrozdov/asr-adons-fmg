@@ -23,7 +23,7 @@ class CompareResultsFrame(wx.Frame):
         self.btnClear = wx.Button(self, wx.ID_ANY, u"Очистить")
         self.btnSave = wx.Button(self, wx.ID_ANY, u"Сохранить")
         self.btnLoad = wx.Button(self, wx.ID_ANY, u"Загрузить")
-        self.combo_box_1 = wx.ComboBox(self, wx.ID_ANY, choices=[u"Столбцы по шаблонам", u"Столбцы по достоверности"], style=wx.CB_DROPDOWN | wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.comboViewBy = wx.ComboBox(self, wx.ID_ANY, choices=[u"Столбцы по шаблонам", u"Столбцы по достоверности"], style=wx.CB_DROPDOWN | wx.CB_DROPDOWN | wx.CB_READONLY)
         self.gridCmpResults = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
         self.textCompareInfo = wx.TextCtrl(self, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
 
@@ -41,7 +41,7 @@ class CompareResultsFrame(wx.Frame):
         # begin wxGlade: CompareResultsFrame.__set_properties
         self.SetTitle(u"Результаты сравнения шаблонов")
         self.SetSize((800, 600))
-        self.combo_box_1.SetSelection(0)
+        self.comboViewBy.SetSelection(0)
         self.gridCmpResults.CreateGrid(0, 1)
         self.gridCmpResults.EnableEditing(0)
         self.gridCmpResults.SetSelectionMode(wx.grid.Grid.wxGridSelectRows)
@@ -60,7 +60,7 @@ class CompareResultsFrame(wx.Frame):
         grid_sizer_1.Add(self.btnLoad, 0, 0, 0)
         grid_sizer_1.AddGrowableCol(4)
         sizer_1.Add(grid_sizer_1, 1, wx.EXPAND, 0)
-        grid_sizer_3.Add(self.combo_box_1, 0, wx.EXPAND, 0)
+        grid_sizer_3.Add(self.comboViewBy, 0, wx.EXPAND, 0)
         grid_sizer_3.Add(self.gridCmpResults, 1, wx.ALL | wx.EXPAND, 0)
         grid_sizer_3.AddGrowableRow(1)
         grid_sizer_3.AddGrowableCol(0)

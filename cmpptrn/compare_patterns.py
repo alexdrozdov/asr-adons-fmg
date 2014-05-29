@@ -6,6 +6,9 @@ import manager
 import wx
 import compare_patterns_interface
 
+def pcmp(x,y):
+    return cmp(x[0],y[0])
+
 class CompareResultsInst(compare_patterns_interface.CompareResultsFrame):
     def __init__(self, manager):
         self.man = manager
@@ -23,19 +26,49 @@ class CompareResultsInst(compare_patterns_interface.CompareResultsFrame):
         
     def btnRefresh_on_click(self, event):  # wxGlade: CompareResultsFrame.<event_handler>
         #FIXME Блокировать добавление новых эелементов в список - возможны сбои при обновлении в процессе вычислений
+        self.refresh()
+        
+    def _refresh_order_by_name(self):
         if self.gridCmpResults.GetNumberRows()>0:
             self.gridCmpResults.DeleteRows(0, self.gridCmpResults.GetNumberRows())
         if self.gridCmpResults.GetNumberCols()>0:
             self.gridCmpResults.DeleteCols(0, self.gridCmpResults.GetNumberCols())
-        self.gridCmpResults.AppendCols(len(self.columns))
+        self.gridCmpResults.AppendCols(1+len(self.columns))
         self.gridCmpResults.AppendRows(len(self.results))
+        self.gridCmpResults.SetColLabelValue(0, u'Смещение')
         for i in range(len(self.columns)):
-            self.gridCmpResults.SetColLabelValue(i, self.columns[i])
+            self.gridCmpResults.SetColLabelValue(i+1, self.columns[i])
         for i in range(len(self.results)):
-            j = 0
+            j = 1
+            self.gridCmpResults.SetCellValue(i,0, str(self.results[i].global_offset))
             for k in self.results[i].probabilities.values():
                 self.gridCmpResults.SetCellValue(i,j,str(k))
                 j += 1
+    def _refresh_order_by_probability(self):
+        if self.gridCmpResults.GetNumberRows()>0:
+            self.gridCmpResults.DeleteRows(0, self.gridCmpResults.GetNumberRows())
+        if self.gridCmpResults.GetNumberCols()>0:
+            self.gridCmpResults.DeleteCols(0, self.gridCmpResults.GetNumberCols())
+        self.gridCmpResults.AppendCols(1+len(self.columns))
+        self.gridCmpResults.AppendRows(len(self.results))
+        self.gridCmpResults.SetColLabelValue(0, u'Смещение')
+        for i in range(len(self.columns)):
+            self.gridCmpResults.SetColLabelValue(i, str(i+1))
+        for i in range(len(self.results)):
+            j = 1
+            self.gridCmpResults.SetCellValue(i,0, str(self.results[i].global_offset))
+            p = self.results[i].probabilities
+            m = [(p[x],x) for x in p.keys()]
+            m.sort(pcmp)
+            for k in m:
+                self.gridCmpResults.SetCellValue(i,j,str(k[1]))
+                j += 1
+    
+    def refresh(self):
+        if 0==self.comboViewBy.Selection:
+            self._refresh_order_by_name()
+        else:
+            self._refresh_order_by_probability()
 
     def btnClear_on_click(self, event):  # wxGlade: CompareResultsFrame.<event_handler>
         print "Event handler 'btnClear_on_click' not implemented!"

@@ -344,7 +344,8 @@ class MatrixPatternLoader(folderscan.FolderScan):
         return pl
 
 class CompareResult:
-    def __init__(self):
+    def __init__(self, global_offset):
+        self.global_offset = global_offset
         self.by_pattern = {}
         self.probabilities = {}
     def add_pattern_result(self, pattern_id, pattern_result):
@@ -385,9 +386,9 @@ class SkeletonCompare:
             print traceback.format_exc()
     def compare_patterns(self, ticket):
         ref_ptrn = ticket.get_data()
-        cr = CompareResult()
+        start_offset = ticket.find_parent_by_data_id("skeleton-root-valid").get_data().start_offset()
+        cr = CompareResult(start_offset)
         for i in self.patterns:
-            #log.log(Log.Critical, "Comparing..."+str(i[1:]))
             cr.add_pattern_result(str(i[1:]), ref_ptrn.compare_with(i[0]))
         cr.evalute_probabilities()
         self.man.push_ticket(ticket.create_ticket("matrix_compare-result", cr))
