@@ -296,11 +296,21 @@ class MatrixPattern:
     def compare_with(self, ptrn):
         start_row = max(self.start_row, ptrn.start_row)
         stop_row = min(self.stop_row, ptrn.stop_row)
+        res = {}
+        cmp_sum = 0.0
+        not_nan_cnt = 0
         for i in range(start_row, stop_row):
             if len(self.rows[i].fragments)>2 and len(ptrn.rows[i].fragments)>2:
-                print "Flist compare - Row", i, "Result", self.rows[i].compare_flist(ptrn.rows[i])
+                res[i] = self.rows[i].compare_flist(ptrn.rows[i])
+                #print "Flist compare - Row", i, "Result", self.rows[i].compare_flist(ptrn.rows[i])
             else:
-                print "List compare - Row", i , "Result", self.rows[i].compare(ptrn.rows[i])
+                res[i] = self.rows[i].compare(ptrn.rows[i])
+                #print "List compare - Row", i , "Result", self.rows[i].compare(ptrn.rows[i])
+            if not numpy.isnan(res[i]):
+                cmp_sum += res[i]
+                not_nan_cnt += 1
+        res["av"] = float(cmp_sum)/float(not_nan_cnt)
+        return res
             
 class MatrixPatternLoader(folderscan.FolderScan):
     def __init__(self, path):
@@ -333,6 +343,19 @@ class MatrixPatternLoader(folderscan.FolderScan):
                 pl.append(p)
         return pl
 
+class CompareResult:
+    def __init__(self):
+        self.by_pattern = {}
+        self.probabilities = {}
+    def add_pattern_result(self, pattern_id, pattern_result):
+        self.by_pattern[pattern_id] = pattern_result
+    def evalute_probabilities(self):
+        full_sum = 0.0
+        for v in self.by_pattern.values():
+            full_sum += v["av"]
+        for k in self.by_pattern.keys():
+            self.probabilities[k] = self.by_pattern[k]["av"] / full_sum  
+
 class SkeletonCompare:
     def __init__(self, manager, wavelet_src, root_src):
         self.man = manager
@@ -341,6 +364,7 @@ class SkeletonCompare:
         #self.man.register_handler(wavelet_src, self.handle_wavelet)
         self.man.register_handler(root_src, self.handle_roots)
         self.man.add_data_id("matrix_compare", "matrix compare class")
+        self.man.add_data_id("matrix_compare-result", "existing patterns compare result")
         self.patterns = []
         
         mpl = MatrixPatternLoader('./temporary/patterns')
@@ -351,17 +375,22 @@ class SkeletonCompare:
         root = ticket.get_data()
         try:
             wavelet = ticket.find_parent_by_data_id(self.wavelet_src).get_data().get_wavelet()
-            print "Parsing root", ticket.description
-            print root.start_row(), root.start_offset()
+            #print "Parsing root", ticket.description
+            #print root.start_row(), root.start_offset()
             mp = MatrixPattern(wavelet, root)
-            self.man.push_ticket(ticket.create_ticket("matrix_compare", mp))
-            self.compare_patterns(mp)
+            t = ticket.create_ticket("matrix_compare", mp)
+            self.man.push_ticket(t)
+            self.compare_patterns(t)
         except:
             print traceback.format_exc()
-    def compare_patterns(self, ref_ptrn):
+    def compare_patterns(self, ticket):
+        ref_ptrn = ticket.get_data()
+        cr = CompareResult()
         for i in self.patterns:
-            log.log(Log.Critical, "Comparing..."+str(i[1:]))
-            ref_ptrn.compare_with(i[0])
+            #log.log(Log.Critical, "Comparing..."+str(i[1:]))
+            cr.add_pattern_result(str(i[1:]), ref_ptrn.compare_with(i[0]))
+        cr.evalute_probabilities()
+        self.man.push_ticket(ticket.create_ticket("matrix_compare-result", cr))
 
 if __name__ == "__main__" :
     src = numpy.loadtxt(u'./a_Дроздов.txt')
