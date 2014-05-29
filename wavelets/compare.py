@@ -301,9 +301,6 @@ class MatrixPattern:
                 print "Flist compare - Row", i, "Result", self.rows[i].compare_flist(ptrn.rows[i])
             else:
                 print "List compare - Row", i , "Result", self.rows[i].compare(ptrn.rows[i])
-    def save(self):
-        with open("./temporary/pattern.pickle", "w") as f:
-            pickle.dump(self, f)
             
 class MatrixPatternLoader(folderscan.FolderScan):
     def __init__(self, path):
