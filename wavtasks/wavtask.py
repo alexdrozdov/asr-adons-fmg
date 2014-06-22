@@ -97,5 +97,5 @@ class WavTasksInst(wavtasks_interface.WavTasks):
 
 def init_module(manager, gui):
     frame = WavTasksInst(manager)
-    gui.register_window(frame, "Обработка wav-файлов", "wnd_wav-asr")
+    gui.register_window(frame, u"Обработка wav-файлов", "wnd_wav-asr")
     return [frame,]

@@ -280,9 +280,27 @@ class SigPattern:
             pass
         log.log(Log.All, "fragments count", len(self.fragments))
             
+class SigPatternEx:
+    default_options = {
+        "fine-for-scaling" : True,
+        "fine-for-inlinear-scaling" : True,
+        "fine-amplitude" : False,
+        "fine-for-uncompared": True,
+        "scale-range": [0.5, 1.5]
+                       }
+    def __init__(self, *arg):
+        if isinstance(arg, SigPattern):
+            self.__init_sigpattern__(arg[0], arg[1])
+        else:
+            self.__init_sig__(arg[0])
+    def __init_sigpattern__(self, sigpattern):
+        self.__init_sig__(sigpattern.sig)
+    def __init_sig__(self, sig):
+        self.sig = sig
+        
+
 class MatrixPattern:
-    def __init__(self, wavelet, root):#mtx, start_row, stop_row):
-        #self.mtx = mtx
+    def __init__(self, wavelet, root):
         self.rows = {}
         self.start_row = root.start_row()
         self.stop_row = root.stop_row()
@@ -302,10 +320,47 @@ class MatrixPattern:
         for i in range(start_row, stop_row):
             if len(self.rows[i].fragments)>2 and len(ptrn.rows[i].fragments)>2:
                 res[i] = self.rows[i].compare_flist(ptrn.rows[i])
-                #print "Flist compare - Row", i, "Result", self.rows[i].compare_flist(ptrn.rows[i])
             else:
                 res[i] = self.rows[i].compare(ptrn.rows[i])
-                #print "List compare - Row", i , "Result", self.rows[i].compare(ptrn.rows[i])
+            if not numpy.isnan(res[i]):
+                cmp_sum += res[i]
+                not_nan_cnt += 1
+        res["av"] = float(cmp_sum)/float(not_nan_cnt)
+        return res
+    
+class MatrixPatternEx(MatrixPattern):
+    def __init__(self, *arg):
+        if len(arg)==2:
+            self.__init_wavelet__(arg[0], arg[1])
+        elif len(arg)==1:
+            self.__init_pattern__(arg[0])
+        else:
+            raise ValueError(u"Конструктор вызван с недопустимым количеством параметров")
+    def __init_wavelet__(self, wavelet, root):
+        self.rows = {}
+        self.start_row = root.start_row()
+        self.stop_row = root.stop_row()
+        for i in range(self.start_row, self.stop_row):
+            start_index = root.relative_offset_at_row(i)-2
+            stop_index = start_index+350
+            sp = SigPatternEx(wavelet[i,start_index:stop_index])
+            sp.build()
+            sp.build_flist(3)
+            self.rows[i] = sp
+    def __init_pattern__(self, pattern):
+        self.rows = {}
+        self.start_row = pattern.start_row
+        self.stop_row = pattern.stop_row
+        for i in pattern.rows.keys():
+            self.rows[i] = SigPatternEx(pattern.rows[i])
+    def compare_with(self,ptrn):
+        start_row = max(self.start_row, ptrn.start_row)
+        stop_row = min(self.stop_row, ptrn.stop_row)
+        res = {}
+        cmp_sum = 0.0
+        not_nan_cnt = 0
+        for i in range(start_row, stop_row):
+            res[i] = self.rows[i].compare(ptrn.rows[i])
             if not numpy.isnan(res[i]):
                 cmp_sum += res[i]
                 not_nan_cnt += 1
@@ -325,7 +380,8 @@ class MatrixPatternLoader(folderscan.FolderScan):
         pickled_patterns = self.get_files("*.pickle")
         for pp in pickled_patterns:
             with open(pp) as f:
-                self.patterns.append(pickle.load(f))
+                mptrn = pickle.load(f)
+                self.patterns.append(MatrixPatternEx(mptrn))
     
     def create_subitem(self, path):
         return MatrixPatternLoader(path)

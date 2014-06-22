@@ -64,5 +64,5 @@ class ControlFrameInst(control_interface.ControlFrame):
 
 def init_module(manager, gui):
     frame = ControlFrameInst(manager)
-    gui.register_window(frame, "Задания для распознавания", "wnd_wavelet-asr")
+    gui.register_window(frame, u"Задания для распознавания", "wnd_wavelet-asr")
     return [frame,]

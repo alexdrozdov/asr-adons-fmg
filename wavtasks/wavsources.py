@@ -181,5 +181,5 @@ class WavSourcesInst(wavsources_interface.WavSources):
 
 def init_module(manager, gui):
     frame = WavSourcesInst(manager)
-    gui.register_window(frame, "Обработка wav-файлов для ФМР", "wnd_wav-fmg")
+    gui.register_window(frame, u"Обработка wav-файлов для ФМР", "wnd_wav-fmg")
     return [frame,]
