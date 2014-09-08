@@ -8,14 +8,16 @@ import manager
 import wx
 import pickle
 import compare_patterns_interface
+import adon_window
 
 def pcmp(x,y):
     return cmp(x[0],y[0])
 
-class CompareResultsInst(compare_patterns_interface.CompareResultsFrame):
+class CompareResultsInst(compare_patterns_interface.CompareResultsFrame, adon_window.AdonWindow):
     def __init__(self, manager):
         self.man = manager
         compare_patterns_interface.CompareResultsFrame.__init__(self, None, -1, "")
+        adon_window.AdonWindow.__init__(self, window_id='wnd_compare_patterns', window_caption='')
         self.man.register_handler("matrix_compare-result", self.handle_compare_result)
         self.columns = []
         self.results = []

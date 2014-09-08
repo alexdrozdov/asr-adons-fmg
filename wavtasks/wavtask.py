@@ -6,11 +6,13 @@ import localdb
 from wav_source import *
 import music
 import os.path
+import adon_window
 
-class WavTasksInst(wavtasks_interface.WavTasks):
+class WavTasksInst(wavtasks_interface.WavTasks, adon_window.AdonWindow):
     def __init__(self, manager):
     	self.man = manager
         wavtasks_interface.WavTasks.__init__(self, None, -1, "")
+        adon_window.AdonWindow.__init__(self, window_id='wnd_wav-asr', window_caption='')
         self.Bind(wx.EVT_CLOSE, self.btnClose_handler, self)
         self.file_list = []
         try:
