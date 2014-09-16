@@ -354,7 +354,8 @@ class SkeletonSamplerate:
         else:
             self.mean_width = delta_offset
         self.prev_root = root
-        print "MeanWidth:", self.mean_width, "Offset:", delta_offset
+        #print "MeanWidth:", self.mean_width, "Offset:", delta_offset
+        ticket.add_sticky("mean-width", self.mean_width)
 
 
 class SkeletonFindBits:
@@ -381,7 +382,7 @@ class SkeletonFindBits:
 def init_module(manager, gui):
     return [SkeletonExtractor(manager, "wavelet-extremums-powers", "skeleton-root"),
             #SkeletonPrinter(manager, "skeleton-root")]
-            SkeletonOverlapFilter(manager, "skeleton-root-merged", "skeleton-root-valid")]
+            SkeletonOverlapFilter(manager, "skeleton-root-merged", "skeleton-root-valid"),
             #SkeletonPrinter(manager, "skeleton-root-valid"),
-            #SkeletonSamplerate(manager, "skeleton-root-valid"),
+            SkeletonSamplerate(manager, "skeleton-root-valid")]
             #SkeletonFindBits(manager, "skeleton-root-valid")]
