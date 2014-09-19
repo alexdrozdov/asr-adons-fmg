@@ -246,6 +246,14 @@ class WaveletReshaper:
         w = SignalWavelet(wv.get_time(), wv.get_scale(), tmp_sig)
         self.man.push_ticket(ticket.create_ticket(self.dst_name, w))
 
+class AdonFactory(object):
+    pass
+
+class BasicAdon(object):
+    def __init__(self, manager, data_names_binding, aux_params = None):
+        self.man = manager
+    def register_handler(self, internal_data_name, handler):
+        self.man.register_handler(data_id, handler)
 
 def init_module(manager, gui):
     import_analize_modules()
