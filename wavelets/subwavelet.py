@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import traceback
+import numpy
 from iwavelet import *
 
 class SkeletonToWavelet:
@@ -20,13 +21,20 @@ class SkeletonToWavelet:
             print traceback.format_exc()
     def root_to_subwavelet(self, wavelet, root_ticket):
         skeleton_root = root_ticket.get_data()
-        mean_width = int(root_ticket.get_sticky("mean-width"))
+        try:
+            mean_width = int(root_ticket.find_ticket_by_sticky("mean-width").get_sticky("mean-width"))
+        except:
+            return
         start_index = skeleton_root.relative_start_offset()-2
         stop_index = start_index+mean_width
         wavelet_data = wavelet.get_wavelet()
-        wv = SignalWavelet(range(mean_width), wavelet.get_scale(), wavelet_data[:, start_index:stop_index])
+        subwavelet = numpy.zeros((wavelet_data.shape[0], mean_width))
+        for i in range(wavelet_data.shape[0]):
+            offset = skeleton_root.relative_offset_at_row(i)
+            subwavelet[i,:] = wavelet_data[i, offset:offset+mean_width]
+        wv = SignalWavelet(range(mean_width), wavelet.get_scale(), subwavelet)
         return wv
 
 def init_module(manager, gui):
-    return [SkeletonToWavelet(manager, "wavelet" ,"skeleton-root-valid")]
+    return [SkeletonToWavelet(manager, "wavelet" ,"skeleton-offsets")]
 
