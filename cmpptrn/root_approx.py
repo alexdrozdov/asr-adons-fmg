@@ -111,8 +111,37 @@ class RootApprox(object):
                 best_approx = r
                 min_err = err
         return self._approx(x, y, best_approx)
+    
+class RootOffsets(object):
+    def __init__(self, manager, src_name, dst_name):
+        self.__init_fixed_row_offsets()
+        self.man = manager
+        self.src_name = src_name
+        self.dst_name = dst_name
+        self.man.register_handler(self.src_name, self.handle_root)
+        self.man.add_data_id(self.dst_name, description=u"Аппроксимированные смещения фронта", tag="undefined")
+    def handle_root(self, ticket):
+        root = ticket.get_data()
+        offsets = {}
+        for r in range(root.start_row(), root.stop_row()):
+            offsets[r] = root.relative_offset_at_row(r) - self.fixed_row_offsets[r]
+        for r in range(root.start_row()):
+            offsets[r] = root.relative_start_offset() - self.fixed_row_offsets[r]
+        for r in range(root.stop_row(), 12):
+            offsets[r] = root.relative_stop_offset() - self.fixed_row_offsets[r]
+        offsets = [offsets[r] for r in range(12)]
+        so = SkeletonOffset(root, offsets)
+        self.man.push_ticket(ticket.create_ticket(self.dst_name, so))
+    def __init_fixed_row_offsets(self):
+        self.fixed_row_offsets = {r:20 for r in range(12)}
+        self.fixed_row_offsets[0] = 60
+        self.fixed_row_offsets[1] = 60
+        self.fixed_row_offsets[2] = 60
+        self.fixed_row_offsets[3] = 60
+        self.fixed_row_offsets[4] = 40
+
 
 def init_module(manager, gui):
-    ra = RootApprox(manager, "skeleton-root-valid", "skeleton-offsets")
+    ra = RootOffsets(manager, "skeleton-root-valid", "skeleton-offsets")
     return [ra,]
 
