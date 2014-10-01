@@ -252,6 +252,8 @@ class WavSound:
         
     def length(self):
         return self._sound.shape[0]
+    def get_sound(self):
+        return self._sound
         
 
 class NoteList:

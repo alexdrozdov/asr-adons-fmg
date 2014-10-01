@@ -54,6 +54,7 @@ class WavSplit:
         self.man.register_handler(src_name, self.handler_wav)
         self.man.register_handler("skeleton-root", self.handler_root)
         self.man.add_data_id(dst_name, dst_desc, "object")
+        self.man.add_data_id("wav", "wav-sound", "wav-sound")
         self.src_name = src_name
         self.dst_name = dst_name
         self.dst_desc = dst_desc
