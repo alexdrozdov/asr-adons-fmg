@@ -1,2 +1,3 @@
 
-__all__ = ['swt_conv', 'patterns', 'skeleton', 'split_merge', 'control', 'compare', 'subwavelet']
+__all__ = ['swt_conv', 'patterns', 'skeleton', 'split_merge', 'control', 'compare', 'subwavelet', 'highscale_power']
+
