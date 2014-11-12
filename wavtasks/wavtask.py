@@ -15,6 +15,8 @@ class WavTasksInst(wavtasks_interface.WavTasks, adon_window.AdonWindow):
         adon_window.AdonWindow.__init__(self, window_id='wnd_wav-asr', window_caption='')
         self.Bind(wx.EVT_CLOSE, self.btnClose_handler, self)
         self.file_list = []
+        #Register callback function for remote calls
+        localdb.db.write_temporary('/db/temporary/remote_cmd/wavtask/execute', self.remote_cmd_execute)
         try:
         	self.file_list = localdb.db.read_value("/db/persistent/wavtasks/file_list")
         except:
@@ -84,7 +86,7 @@ class WavTasksInst(wavtasks_interface.WavTasks, adon_window.AdonWindow):
         localdb.db.write_persistent("/db/persistent/wavtasks/file_list", self.file_list)
         self.show_list()
         self.lbWavFiles.SetSelection(sel+1)
-    def btnExecute_handler(self, event):  # wxGlade: WavTasks.<event_handler>
+    def execute(self):
         #Параметры решетки
 		swt_config = {"family"         : "bior2.4",
 		               "max_level"  : 11,
@@ -96,6 +98,11 @@ class WavTasksInst(wavtasks_interface.WavTasks, adon_window.AdonWindow):
 		for f in self.file_list:
 			ws_0 = music.WavSound(f)
 			self.man.push_ticket(self.man.ticket("run", ws_0, description=os.path.basename(f)))
+
+    def btnExecute_handler(self, event): 
+        self.execute()
+    def remote_cmd_execute(self, params=None):
+        self.execute()
 
 def init_module(manager, gui):
     frame = WavTasksInst(manager)
